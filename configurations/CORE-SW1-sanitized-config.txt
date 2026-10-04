@@ -1,0 +1,90 @@
+! HabeebSec Enterprise
+! Device: CORE-SW1
+! Role: Core Switching / VLAN Distribution / Network Segmentation
+! Configuration sanitized for public portfolio use
+
+hostname CORE-SW1
+
+!
+! Administrative security
+!
+ip domain-name habeebsec.local
+username coreadmin privilege 15 secret <REDACTED>
+crypto key generate rsa modulus 1024
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+
+!
+! Management SVI
+!
+interface Vlan10
+ description Management SVI
+ ip address 192.168.10.10 255.255.255.0
+ no shutdown
+
+ip default-gateway 192.168.10.1
+
+!
+! VLAN definitions
+!
+vlan 10
+ name MANAGEMENT
+
+vlan 20
+ name IT
+
+vlan 30
+ name STAFF
+
+vlan 40
+ name SERVERS
+
+vlan 50
+ name GUEST
+
+!
+! Trunk to R1
+!
+interface FastEthernet0/1
+ description Trunk to R1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50
+
+!
+! Trunk to ACC-MGMT
+!
+interface FastEthernet0/2
+ description Trunk to ACC-MGMT
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50
+
+!
+! Trunk to ACC-IT
+!
+interface FastEthernet0/3
+ description Trunk to ACC-IT
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50
+
+!
+! Trunk to ACC-STAFF
+!
+interface FastEthernet0/4
+ description Trunk to ACC-STAFF
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50
+
+!
+! Trunk to SERVER-SW1
+!
+interface FastEthernet0/5
+ description Trunk to SERVER-SW1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50
+
+!
+! End of sanitized configuration
+!
