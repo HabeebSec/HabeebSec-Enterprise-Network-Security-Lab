@@ -1,0 +1,130 @@
+! HabeebSec Enterprise
+! Device: R1
+! Role: Inter-VLAN Routing / DHCP Relay / Network Security
+! Configuration sanitized for public portfolio use
+
+hostname R1
+
+!
+! Management / administrative security
+!
+ip domain-name habeebsec.local
+username r1admin privilege 15 secret <REDACTED>
+crypto key generate rsa modulus 1024
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+
+!
+! Router-on-a-Stick
+!
+interface GigabitEthernet0/0
+ description Trunk to CORE-SW1
+ no shutdown
+
+interface GigabitEthernet0/0.10
+ description Management VLAN
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+ ip helper-address 192.168.40.10
+ ip access-group MGMT-IN in
+
+interface GigabitEthernet0/0.20
+ description IT VLAN
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+ ip helper-address 192.168.40.10
+ ip access-group IT-IN in
+
+interface GigabitEthernet0/0.30
+ description Staff VLAN
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+ ip helper-address 192.168.40.10
+ ip access-group STAFF-IN in
+
+interface GigabitEthernet0/0.40
+ description Server VLAN
+ encapsulation dot1Q 40
+ ip address 192.168.40.1 255.255.255.0
+
+interface GigabitEthernet0/0.50
+ description Guest VLAN
+ encapsulation dot1Q 50
+ ip address 192.168.50.1 255.255.255.0
+ ip helper-address 192.168.40.10
+ ip access-group GUEST-IN in
+
+!
+! STAFF-IN
+!
+ip access-list extended STAFF-IN
+ permit udp 192.168.30.0 0.0.0.255 host 192.168.40.11 eq 53
+ permit tcp 192.168.30.0 0.0.0.255 host 192.168.40.11 eq 53
+ permit tcp 192.168.30.0 0.0.0.255 host 192.168.40.12 eq 21
+ deny tcp 192.168.30.0 0.0.0.255 any eq 22
+ deny ip 192.168.30.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.30.0 0.0.0.255 192.168.20.0 0.0.0.255
+ permit tcp 192.168.30.0 0.0.0.255 host 192.168.40.12
+ deny ip 192.168.30.0 0.0.0.255 192.168.40.0 0.0.0.255
+ permit udp any eq bootpc any eq bootps
+ deny ip any any
+
+!
+! IT-IN
+!
+ip access-list extended IT-IN
+ permit udp 192.168.20.0 0.0.0.255 host 192.168.40.11 eq 53
+ permit tcp 192.168.20.0 0.0.0.255 host 192.168.40.11 eq 53
+ permit tcp 192.168.20.0 0.0.0.255 host 192.168.40.12
+ permit tcp 192.168.20.0 0.0.0.255 any eq 22
+ permit ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
+ permit ip 192.168.20.0 0.0.0.255 192.168.30.0 0.0.0.255
+ deny ip 192.168.20.0 0.0.0.255 192.168.40.0 0.0.0.255
+ deny ip 192.168.20.0 0.0.0.255 192.168.50.0 0.0.0.255
+ permit udp any eq bootpc any eq bootps
+ deny ip any any
+
+!
+! MGMT-IN
+!
+ip access-list extended MGMT-IN
+ permit udp 192.168.10.0 0.0.0.255 host 192.168.40.11 eq 53
+ permit tcp 192.168.10.0 0.0.0.255 host 192.168.40.11 eq 53
+ permit tcp 192.168.10.0 0.0.0.255 host 192.168.40.12
+ permit tcp 192.168.10.0 0.0.0.255 any eq 22
+ deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255
+ deny ip 192.168.10.0 0.0.0.255 192.168.40.0 0.0.0.255
+ deny ip 192.168.10.0 0.0.0.255 192.168.50.0 0.0.0.255
+ permit udp any eq bootpc any eq bootps
+ deny ip any any
+
+!
+! SERVER-IN
+! Created for design evaluation but intentionally not applied.
+!
+ip access-list extended SERVER-IN
+ deny ip 192.168.40.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.40.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.40.0 0.0.0.255 192.168.30.0 0.0.0.255
+ deny ip 192.168.40.0 0.0.0.255 192.168.50.0 0.0.0.255
+ deny ip any any
+
+!
+! GUEST-IN
+!
+ip access-list extended GUEST-IN
+ deny ip 192.168.50.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.50.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.50.0 0.0.0.255 192.168.30.0 0.0.0.255
+ deny ip 192.168.50.0 0.0.0.255 192.168.40.0 0.0.0.255
+ deny tcp 192.168.50.0 0.0.0.255 host 192.168.50.1 eq 22
+ permit ip 192.168.50.0 0.0.0.255 any
+ deny ip any any
+
+!
+! End of sanitized configuration
+!
