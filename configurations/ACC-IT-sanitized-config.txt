@@ -1,0 +1,82 @@
+! HabeebSec Enterprise
+! Device: ACC-IT
+! Role: IT Department Access Switch
+! Configuration sanitized for public portfolio use
+
+hostname ACC-IT
+
+!
+! Administrative security
+!
+ip domain-name habeebsec.local
+username accitadmin privilege 15 secret <REDACTED>
+crypto key generate rsa modulus 1024
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+
+!
+! VLAN definitions
+!
+vlan 10
+ name MANAGEMENT
+
+vlan 20
+ name IT
+
+vlan 30
+ name STAFF
+
+vlan 40
+ name SERVERS
+
+vlan 50
+ name GUEST
+
+!
+! Management SVI
+!
+interface Vlan10
+ description Management SVI
+ ip address 192.168.10.12 255.255.255.0
+ no shutdown
+
+ip default-gateway 192.168.10.1
+
+!
+! Uplink to CORE-SW1
+!
+interface FastEthernet0/1
+ description Trunk to CORE-SW1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50
+
+!
+! IT endpoint
+!
+interface FastEthernet0/2
+ description IT-PC1
+ switchport mode access
+ switchport access vlan 20
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+!
+! IT endpoint
+!
+interface FastEthernet0/3
+ description IT-PC2
+ switchport mode access
+ switchport access vlan 20
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+!
+! End of sanitized configuration
+!
